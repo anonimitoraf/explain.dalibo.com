@@ -51,12 +51,23 @@ class Plan(db.Model):
         return dict(shareId=self.id, title=self.title, plan=self.plan,
                     sql=self.sql,)
 
+def get_remote_addr(req):
+    """The remote address of the client."""
+    fwd = req.environ.get('HTTP_X_FORWARDED_FOR', None)
+    if fwd is None:
+        return req.environ.get('REMOTE_ADDR')
+    # sometimes x-forwarded-for contains multiple addresses,
+    # actual client is first, rest are proxy
+    fwd = fwd.split(',')[0]
+    return fwd
+
 @app.before_request
 def limit_remote_addr():
     whitelist_ip_str = app.config.get('WHITELISTED_IPS') or ''
     whitelist_ips = [s.strip() for s in whitelist_ip_str.split(',')]
-    if request.remote_addr not in whitelist_ips:
-        print("IP not in whitelist:", request.remote_addr)
+    req_ip = get_remote_addr(request)
+    if req_ip not in whitelist_ips:
+        print("IP not in whitelist:", req_ip)
         abort(403) # Forbidden
 
 @app.route('/')
