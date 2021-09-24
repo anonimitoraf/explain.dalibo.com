@@ -6,7 +6,8 @@ from flask import (
     request,
     session,
     url_for,
-    abort
+    abort,
+    Response
 )
 from flask_wtf import (
     FlaskForm
@@ -68,7 +69,11 @@ def limit_remote_addr():
     req_ip = get_remote_addr(request)
     if req_ip not in whitelist_ips:
         print("IP not in whitelist:", req_ip)
-        abort(403) # Forbidden
+        res = Response(
+            "Your IP " + req_ip + " is not in the whitelist. Ask the admin to add it in.",
+            status = 403 # Forbidden
+        )
+        abort(res)
 
 @app.route('/')
 def index():
